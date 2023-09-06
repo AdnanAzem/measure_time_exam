@@ -1,4 +1,5 @@
 import 'package:excel_example/button_config.dart';
+import 'package:excel_example/final_page.dart';
 import 'package:excel_example/styled_button.dart';
 import 'package:excel_example/user_sheets_api.dart';
 import 'package:flutter/material.dart';
@@ -301,6 +302,13 @@ class _GamePageState extends State<GamePage> {
                           _handleCenterButtonPressDown();
                           containerColor = Colors.purple;
                           round++;
+                          if (round > 30) {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        FinalPage()));
+                          }
                         });
                       },
                       onTapUp: (_) {
