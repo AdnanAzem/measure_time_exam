@@ -222,6 +222,7 @@ class _GamePageState extends State<GamePage> {
                     value: ++wrongAnswers,
                   );
                   randomPhoto = blackImg;
+                  _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([round,'wrong', responseTimeOfHolding, responseTimeOfAnswer]);
                   print("wrong");
                 } else {
@@ -230,10 +231,11 @@ class _GamePageState extends State<GamePage> {
                     key: 'correctAnswers',
                     value: ++correctAnswers,
                   );
+                  _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([round,'correct', responseTimeOfHolding, responseTimeOfAnswer]);
                   randomPhoto = veryGoodImg;
                 }
-                _handleOneOfTheCircelsIsPressed();
+                
                 startTime = 0;
                 endTime = 0;
               });
@@ -269,6 +271,7 @@ class _GamePageState extends State<GamePage> {
                     key: 'wrongAnswers',
                     value: ++wrongAnswers,
                   );
+                  _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([round,'wrong', responseTimeOfHolding, responseTimeOfAnswer]);
                   randomPhoto = blackImg;
                   print("wrong");
@@ -278,10 +281,11 @@ class _GamePageState extends State<GamePage> {
                     key: 'correctAnswers',
                     value: ++correctAnswers,
                   );
+                  _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([round,'correct', responseTimeOfHolding, responseTimeOfAnswer]);
                   randomPhoto = veryGoodImg;
                 }
-                _handleOneOfTheCircelsIsPressed();
+                // _handleOneOfTheCircelsIsPressed();
                 startTime = 0;
                 endTime = 0;
               });
