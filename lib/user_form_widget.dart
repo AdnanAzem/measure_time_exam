@@ -19,6 +19,9 @@ class UserFormWidget extends StatefulWidget {
   State<UserFormWidget> createState() => _UserFormWidgetState();
 }
 
+late String name;
+// late final age;
+
 class _UserFormWidgetState extends State<UserFormWidget> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController controllerChildName;
@@ -85,27 +88,28 @@ class _UserFormWidgetState extends State<UserFormWidget> {
       );
 
   Widget buildName() => TextFormField(
-        controller: controllerChildName,
-        decoration: const InputDecoration(
-          labelText: 'Name',
-          border: OutlineInputBorder(),
-        ),
-        validator: (value) =>
-            value != null && value.isEmpty ? 'Enter Child Name' : null,
-      );
+      controller: controllerChildName,
+      decoration: const InputDecoration(
+        labelText: 'Name',
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) {
+        value != null && value.isEmpty ? 'Enter Child Name' : null;
+        name = value!;
+      });
 
   Widget buildAge() => TextFormField(
-        keyboardType: TextInputType.number,
-        inputFormatters: <TextInputFormatter>[
-          FilteringTextInputFormatter.digitsOnly
-        ],
-        controller: controllerAge,
-        decoration: const InputDecoration(
-          labelText: 'Age',
-          border: OutlineInputBorder(),
-        ),
-        validator: (value) =>
-            value != null && value.isEmpty ? 'Enter Age' : null,
+      keyboardType: TextInputType.number,
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.digitsOnly
+      ],
+      controller: controllerAge,
+      decoration: const InputDecoration(
+        labelText: 'Age',
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) =>
+        value != null && value.isEmpty ? 'Enter Age' : null,
       );
 
   Widget buildTesterName() => TextFormField(

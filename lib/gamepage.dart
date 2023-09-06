@@ -1,13 +1,17 @@
 import 'package:excel_example/button_config.dart';
 import 'package:excel_example/final_page.dart';
 import 'package:excel_example/styled_button.dart';
+import 'package:excel_example/user_form_widget.dart';
 import 'package:excel_example/user_sheets_api.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:csv/csv.dart';
 
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -21,6 +25,15 @@ class GamePage extends StatefulWidget {
   State<GamePage> createState() => _GamePageState();
 }
 
+List<List<dynamic>> dataToWrite = [
+  [
+    'quesion',
+    'answer',
+    'response of holding button',
+    'respone of click on the answer'
+  ]
+];
+
 late Color redColor;
 bool pressedButton = false;
 bool isRed = false;
@@ -31,6 +44,29 @@ int wrongAnswers = 0;
 Color containerColor = Colors.grey;
 int currentTimeInNanoseconds = getCurrentTimeInNanoseconds();
 int previousTimeInNanoseconds = getCurrentTimeInNanoseconds();
+int responseTimeOfAnswer = 0;
+int responseTimeOfHolding = 0;
+
+Future<void> saveDataToCSV() async {
+  List<List<dynamic>> data = dataToWrite;
+
+  final directory = (await getApplicationDocumentsDirectory());
+  final String path = directory.path;
+
+  final csvFilePath = "$path/csv-$name.csv";
+
+  // Create a File instance and open it for writing.
+  File file = File(csvFilePath);
+  IOSink sink = file.openWrite();
+
+  // Create a CSV converter and write the data to the file.
+  String csvData = const ListToCsvConverter().convert(data);
+  sink.write(csvData);
+
+  // Close the file when done writing.
+  await sink.flush();
+  await sink.close();
+}
 
 // return the time in nanoseconds
 int getCurrentTimeInNanoseconds() {
@@ -124,7 +160,8 @@ class _GamePageState extends State<GamePage> {
       endTime = DateTime.now().microsecondsSinceEpoch;
       // isButtonPressed = false;
       print("the time when the user released the center button: $endTime");
-      int time_of_holding_the_button = endTime - startTime;
+      int time_of_holding_the_button = endTime - startTime + 2000000;
+      responseTimeOfHolding = time_of_holding_the_button;
       print("time_of_holding_the_button:$time_of_holding_the_button");
     });
   }
@@ -132,6 +169,7 @@ class _GamePageState extends State<GamePage> {
   void _handleOneOfTheCircelsIsPressed() {
     if (endTime > startTime) {
       int elapsedNanoseconds = DateTime.now().microsecondsSinceEpoch - endTime;
+      responseTimeOfAnswer = elapsedNanoseconds;
       print("response time: $elapsedNanoseconds microseconds");
     }
     setState(() {
@@ -184,6 +222,7 @@ class _GamePageState extends State<GamePage> {
                     value: ++wrongAnswers,
                   );
                   randomPhoto = blackImg;
+                  dataToWrite.add([round,'wrong', responseTimeOfHolding, responseTimeOfAnswer]);
                   print("wrong");
                 } else {
                   UserSheetsApi.updateCell(
@@ -191,6 +230,7 @@ class _GamePageState extends State<GamePage> {
                     key: 'correctAnswers',
                     value: ++correctAnswers,
                   );
+                  dataToWrite.add([round,'correct', responseTimeOfHolding, responseTimeOfAnswer]);
                   randomPhoto = veryGoodImg;
                 }
                 _handleOneOfTheCircelsIsPressed();
@@ -229,6 +269,7 @@ class _GamePageState extends State<GamePage> {
                     key: 'wrongAnswers',
                     value: ++wrongAnswers,
                   );
+                  dataToWrite.add([round,'wrong', responseTimeOfHolding, responseTimeOfAnswer]);
                   randomPhoto = blackImg;
                   print("wrong");
                 } else {
@@ -237,6 +278,7 @@ class _GamePageState extends State<GamePage> {
                     key: 'correctAnswers',
                     value: ++correctAnswers,
                   );
+                  dataToWrite.add([round,'correct', responseTimeOfHolding, responseTimeOfAnswer]);
                   randomPhoto = veryGoodImg;
                 }
                 _handleOneOfTheCircelsIsPressed();
@@ -295,36 +337,68 @@ class _GamePageState extends State<GamePage> {
                 ),
                 Expanded(
                   child: Center(
-                    child: GestureDetector(
-                      onTapDown: (_) {
-                        setState(() {
-                          _handleCenterButtonPressDown();
-                          containerColor = Colors.purple;
-                          round++;
-                          if (round > 30) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (BuildContext context) => const FinalPage(),
+                    child: Material(
+                      color:
+                          containerColor, // This sets the color when not pressed
+                      borderRadius: BorderRadius.circular(100),
+                      child: InkWell(
+                        onTapDown: (_) {
+                          setState(() {
+                            _handleCenterButtonPressDown();
+                            containerColor = Colors.purple;
+                            round++;
+                            if (round > 30) {
+                              saveDataToCSV();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      const FinalPage(),
+                                ),
+                              );
+                            }
+                          });
+                        },
+                        onTapUp: (_) {
+                          setState(() {
+                            _handleCenterButtonPressUp();
+                            containerColor = Colors.grey;
+                          });
+                        },
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF8636FF), Color(0xFF6D2BFF)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF6D2BFF).withOpacity(0.5),
+                                spreadRadius: 5,
+                                blurRadius: 10,
+                                offset: Offset(0, 5),
                               ),
-                            );
-                          }
-                        });
-                      },
-                      onTapUp: (_) {
-                        setState(() {
-                          _handleCenterButtonPressUp();
-                          containerColor = Colors.grey;
-                        });
-                      },
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        color: containerColor,
-                        child: const Center(
-                          child: Text(
-                            "Keep Holding!",
-                            style: TextStyle(fontSize: 20),
+                              BoxShadow(
+                                color: Color(0xFF8636FF).withOpacity(0.5),
+                                spreadRadius: -2,
+                                blurRadius: 10,
+                                offset: Offset(0, -5),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              "Keep Holding!",
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ),
