@@ -94,7 +94,7 @@ String getRandomPhoto() {
 }
 
 class _GamePageState extends State<GamePage> {
-  bool isButtonPressed = false;
+  // bool isButtonPressed = false;
   Icon randomArrow = const Icon(
     Icons.arrow_back,
     color: Colors.black,
@@ -108,12 +108,12 @@ class _GamePageState extends State<GamePage> {
 
   void _handleCenterButtonPressDown() {
     startTime = DateTime.now().microsecondsSinceEpoch;
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       setState(() {
         randomArrow = getRandomArrow();
         randomPhoto = getRandomPhoto();
         pressedButton = true;
-        isButtonPressed = true;
+        // isButtonPressed = true;
         print("the time when the user pressed the center button: $startTime");
       });
     });
@@ -122,8 +122,7 @@ class _GamePageState extends State<GamePage> {
   void _handleCenterButtonPressUp() {
     setState(() {
       endTime = DateTime.now().microsecondsSinceEpoch;
-      // pressedButton = false;
-      isButtonPressed = false;
+      // isButtonPressed = false;
       print("the time when the user released the center button: $endTime");
       int time_of_holding_the_button = endTime - startTime;
       print("time_of_holding_the_button:$time_of_holding_the_button");
@@ -141,7 +140,7 @@ class _GamePageState extends State<GamePage> {
         Icons.arrow_back,
         color: Colors.black,
       );
-      Future.delayed(Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         randomPhoto = 'assets/images/black.png';
       });
     });
@@ -304,17 +303,17 @@ class _GamePageState extends State<GamePage> {
                           round++;
                           if (round > 30) {
                             Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (BuildContext context) =>
-                                        FinalPage()));
+                              context,
+                              MaterialPageRoute(
+                                builder: (BuildContext context) => const FinalPage(),
+                              ),
+                            );
                           }
                         });
                       },
                       onTapUp: (_) {
                         setState(() {
                           _handleCenterButtonPressUp();
-                          // isButtonPressed = false;
                           containerColor = Colors.grey;
                         });
                       },
