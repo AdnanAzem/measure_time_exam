@@ -121,8 +121,10 @@ Color getRandomRedOrGreenColor() {
 // return random picture (rainbow or arrow)
 String getRandomPhoto() {
   final List<String> photoAssets = [
-    'assets/images/arrows2.png',
-    'assets/images/rainbow2.jpeg'
+    'https://github.com/AdnanAzem/measure_time_exam/blob/main/assets/gifs/arrows.gif',
+    'https://github.com/AdnanAzem/measure_time_exam/blob/main/assets/gifs/rainbow-clouds.gif'
+    // 'assets/images/arrows2.png',
+    // 'assets/images/rainbow2.jpeg'
   ];
 
   Random random = Random();
@@ -137,9 +139,13 @@ class _GamePageState extends State<GamePage> {
     Icons.arrow_back,
     color: Colors.black,
   );
-  String blackImg = 'assets/images/black.png';
-  String veryGoodImg = 'assets/images/verygood.png';
-  String randomPhoto = 'assets/images/black.png';
+  String blackImg = '';
+  String veryGoodImg = '';
+  String wrongImg = '';
+  String randomPhoto = '';
+  // String blackImg = 'assets/images/black.png';
+  // String veryGoodImg = 'assets/images/verygood.png';
+  // String randomPhoto = 'assets/images/black.png';
   int startTime = 0;
   int endTime = 0;
   int round = 0;
