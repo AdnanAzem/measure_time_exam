@@ -46,6 +46,8 @@ int currentTimeInNanoseconds = getCurrentTimeInNanoseconds();
 int previousTimeInNanoseconds = getCurrentTimeInNanoseconds();
 int responseTimeOfAnswer = 0;
 int responseTimeOfHolding = 0;
+final random = Random();
+int randomNumber = random.nextInt(2) + 1;
 
 Future<void> saveDataToCSV() async {
   List<List<dynamic>> data = dataToWrite;
@@ -143,8 +145,8 @@ class _GamePageState extends State<GamePage> {
   int round = 0;
 
   void _handleCenterButtonPressDown() {
-    startTime = DateTime.now().microsecondsSinceEpoch;
     Future.delayed(const Duration(seconds: 2), () {
+      startTime = DateTime.now().microsecondsSinceEpoch;
       setState(() {
         randomArrow = getRandomArrow();
         randomPhoto = getRandomPhoto();
@@ -160,7 +162,7 @@ class _GamePageState extends State<GamePage> {
       endTime = DateTime.now().microsecondsSinceEpoch;
       // isButtonPressed = false;
       print("the time when the user released the center button: $endTime");
-      int time_of_holding_the_button = endTime - startTime + 2000000;
+      int time_of_holding_the_button = endTime - startTime;
       responseTimeOfHolding = time_of_holding_the_button;
       print("time_of_holding_the_button:$time_of_holding_the_button");
     });
@@ -188,6 +190,15 @@ class _GamePageState extends State<GamePage> {
     String jsonString =
         await rootBundle.loadString('assets/buttons/red_button.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
+
+    if (randomNumber == 1) {
+      return ButtonConfig.fromJson(jsonMap);
+    } else if (randomNumber == 2) {
+      jsonString =
+          await rootBundle.loadString('assets/buttons/green_button.json');
+      jsonMap = json.decode(jsonString);
+      return ButtonConfig.fromJson(jsonMap);
+    }
     return ButtonConfig.fromJson(jsonMap);
   }
 
@@ -195,10 +206,19 @@ class _GamePageState extends State<GamePage> {
     String jsonString =
         await rootBundle.loadString('assets/buttons/green_button.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
+
+    if (randomNumber == 1) {
+      return ButtonConfig.fromJson(jsonMap);
+    } else if (randomNumber == 2) {
+      jsonString =
+          await rootBundle.loadString('assets/buttons/red_button.json');
+      jsonMap = json.decode(jsonString);
+      return ButtonConfig.fromJson(jsonMap);
+    }
     return ButtonConfig.fromJson(jsonMap);
   }
 
-  FutureBuilder<ButtonConfig> getGreenCircle() {
+  FutureBuilder<ButtonConfig> getRightCircle() {
     return FutureBuilder<ButtonConfig>(
       future: loadButtonConfig1(),
       builder: (context, snapshot) {
@@ -215,7 +235,8 @@ class _GamePageState extends State<GamePage> {
             onPressed: () async {
               final lastRow = await UserSheetsApi.getRowCount();
               setState(() {
-                if ((isRanbow && isRed) || (!isRanbow && !isRightArrow)) {
+                if ((randomNumber == 1 && isRanbow && isRed) ||
+                    (randomNumber == 1 && !isRanbow && !isRightArrow)) {
                   UserSheetsApi.updateCell(
                     id: lastRow,
                     key: 'wrongAnswers',
@@ -223,7 +244,28 @@ class _GamePageState extends State<GamePage> {
                   );
                   randomPhoto = blackImg;
                   _handleOneOfTheCircelsIsPressed();
-                  dataToWrite.add([round,'wrong', responseTimeOfHolding, responseTimeOfAnswer]);
+                  dataToWrite.add([
+                    round,
+                    'wrong',
+                    responseTimeOfHolding,
+                    responseTimeOfAnswer
+                  ]);
+                  print("wrong");
+                } else if ((randomNumber == 2 && !isRanbow && !isRightArrow) ||
+                    (randomNumber == 2 && isRanbow && !isRed)) {
+                  UserSheetsApi.updateCell(
+                    id: lastRow,
+                    key: 'wrongAnswers',
+                    value: ++wrongAnswers,
+                  );
+                  _handleOneOfTheCircelsIsPressed();
+                  dataToWrite.add([
+                    round,
+                    'wrong',
+                    responseTimeOfHolding,
+                    responseTimeOfAnswer
+                  ]);
+                  randomPhoto = blackImg;
                   print("wrong");
                 } else {
                   UserSheetsApi.updateCell(
@@ -232,10 +274,16 @@ class _GamePageState extends State<GamePage> {
                     value: ++correctAnswers,
                   );
                   _handleOneOfTheCircelsIsPressed();
-                  dataToWrite.add([round,'correct', responseTimeOfHolding, responseTimeOfAnswer]);
+                  dataToWrite.add([
+                    round,
+                    'correct',
+                    responseTimeOfHolding,
+                    responseTimeOfAnswer
+                  ]);
                   randomPhoto = veryGoodImg;
                 }
-                
+                randomNumber = random.nextInt(2) + 1;
+
                 startTime = 0;
                 endTime = 0;
               });
@@ -246,7 +294,7 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
-  FutureBuilder<ButtonConfig> getRedCircle() {
+  FutureBuilder<ButtonConfig> getLeftCircle() {
     return FutureBuilder<ButtonConfig>(
       future: loadButtonConfig(),
       builder: (context, snapshot) {
@@ -265,15 +313,38 @@ class _GamePageState extends State<GamePage> {
             onPressed: () async {
               final last = await UserSheetsApi.getRowCount();
               setState(() {
-                if ((isRanbow && !isRed) || (!isRanbow && isRightArrow)) {
+                if ((randomNumber == 1 && isRanbow && !isRed) ||
+                    (randomNumber == 1 && !isRanbow && isRightArrow)) {
                   UserSheetsApi.updateCell(
                     id: last,
                     key: 'wrongAnswers',
                     value: ++wrongAnswers,
                   );
                   _handleOneOfTheCircelsIsPressed();
-                  dataToWrite.add([round,'wrong', responseTimeOfHolding, responseTimeOfAnswer]);
+                  dataToWrite.add([
+                    round,
+                    'wrong',
+                    responseTimeOfHolding,
+                    responseTimeOfAnswer
+                  ]);
                   randomPhoto = blackImg;
+                  print("wrong");
+                } else if ((randomNumber == 2 && isRanbow && isRed) ||
+                    (randomNumber == 2 && !isRanbow && isRightArrow)) {
+                  UserSheetsApi.updateCell(
+                    id: last,
+                    key: 'wrongAnswers',
+                    value: ++wrongAnswers,
+                  );
+                  _handleOneOfTheCircelsIsPressed();
+                  dataToWrite.add([
+                    round,
+                    'wrong',
+                    responseTimeOfHolding,
+                    responseTimeOfAnswer
+                  ]);
+                  randomPhoto = blackImg;
+
                   print("wrong");
                 } else {
                   UserSheetsApi.updateCell(
@@ -282,10 +353,16 @@ class _GamePageState extends State<GamePage> {
                     value: ++correctAnswers,
                   );
                   _handleOneOfTheCircelsIsPressed();
-                  dataToWrite.add([round,'correct', responseTimeOfHolding, responseTimeOfAnswer]);
+                  dataToWrite.add([
+                    round,
+                    'correct',
+                    responseTimeOfHolding,
+                    responseTimeOfAnswer
+                  ]);
                   randomPhoto = veryGoodImg;
                 }
                 // _handleOneOfTheCircelsIsPressed();
+                randomNumber = random.nextInt(2) + 1;
                 startTime = 0;
                 endTime = 0;
               });
@@ -313,7 +390,7 @@ class _GamePageState extends State<GamePage> {
           Expanded(
             flex: 1,
             child: Center(
-              child: getRedCircle(),
+              child: getLeftCircle(),
             ),
           ),
           Expanded(
@@ -415,7 +492,7 @@ class _GamePageState extends State<GamePage> {
           Expanded(
             flex: 1,
             child: Center(
-              child: getGreenCircle(),
+              child: getRightCircle(),
             ),
           ),
         ],

@@ -14,25 +14,66 @@ class StyledButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: pressedButton
-            ? Color(
-                int.parse(
-                  buttonConfig.buttonColor.replaceAll('#', '0x'),
+    return pressedButton
+        ? ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(buttonConfig.border),
+              ),
+              elevation: buttonConfig.elevation,
+              padding: EdgeInsets.all(buttonConfig.padding),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(int.parse(
+                        buttonConfig.buttonColor.replaceAll('#', '0x'))),
+                    Color(int.parse(
+                        buttonConfig.buttonColor.replaceAll('#', '0x'))),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-              )
-            : Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            buttonConfig.border,
-          ),
-        ),
-        elevation: buttonConfig.elevation,
-        padding: EdgeInsets.all(buttonConfig.padding),
-      ),
-      child: const Text(""),
-    );
+                borderRadius: BorderRadius.circular(buttonConfig.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(int.parse(
+                            buttonConfig.buttonColor.replaceAll('#', '0x')))
+                        .withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.star,
+                    color: pressedButton ? Colors.white : Colors.black,
+                    size: 24,
+                  ),
+                ],
+              ),
+            ),
+          )
+        : ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  buttonConfig.border,
+                ),
+              ),
+              elevation: buttonConfig.elevation,
+              padding: EdgeInsets.all(buttonConfig.padding),
+            ),
+            child: const Text(""),
+          );
   }
 }
