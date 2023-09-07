@@ -121,8 +121,8 @@ Color getRandomRedOrGreenColor() {
 // return random picture (rainbow or arrow)
 String getRandomPhoto() {
   final List<String> photoAssets = [
-    'https://github.com/AdnanAzem/measure_time_exam/blob/main/assets/gifs/arrows.gif',
-    'https://github.com/AdnanAzem/measure_time_exam/blob/main/assets/gifs/rainbow-clouds.gif'
+    'assets/gifs/arrows.gif',
+    'assets/gifs/rainbow-clouds.gif'
     // 'assets/images/arrows2.png',
     // 'assets/images/rainbow2.jpeg'
   ];
@@ -139,10 +139,11 @@ class _GamePageState extends State<GamePage> {
     Icons.arrow_back,
     color: Colors.black,
   );
-  String blackImg = '';
-  String veryGoodImg = '';
-  String wrongImg = '';
-  String randomPhoto = '';
+  String blackImg = 'assets/gifs/black.gif';
+  String veryGoodImg = 'assets/gifs/goodjob.gif';
+  String wrongImg = 'assets/gifs/wronganswer.gif';
+  String randomPhoto = 'assets/gifs/black.gif';
+  
   // String blackImg = 'assets/images/black.png';
   // String veryGoodImg = 'assets/images/verygood.png';
   // String randomPhoto = 'assets/images/black.png';
@@ -158,7 +159,7 @@ class _GamePageState extends State<GamePage> {
         randomPhoto = getRandomPhoto();
         pressedButton = true;
         // isButtonPressed = true;
-        print("the time when the user pressed the center button: $startTime");
+        // print("the time when the user pressed the center button: $startTime");
       });
     });
   }
@@ -167,10 +168,10 @@ class _GamePageState extends State<GamePage> {
     setState(() {
       endTime = DateTime.now().microsecondsSinceEpoch;
       // isButtonPressed = false;
-      print("the time when the user released the center button: $endTime");
-      int time_of_holding_the_button = endTime - startTime;
-      responseTimeOfHolding = time_of_holding_the_button;
-      print("time_of_holding_the_button:$time_of_holding_the_button");
+      // print("the time when the user released the center button: $endTime");
+      int timeOfHoldingTheButton = endTime - startTime;
+      responseTimeOfHolding = timeOfHoldingTheButton;
+      // print("response time from holding until the circles appearce:$time_of_holding_the_button");
     });
   }
 
@@ -178,7 +179,7 @@ class _GamePageState extends State<GamePage> {
     if (endTime > startTime) {
       int elapsedNanoseconds = DateTime.now().microsecondsSinceEpoch - endTime;
       responseTimeOfAnswer = elapsedNanoseconds;
-      print("response time: $elapsedNanoseconds microseconds");
+      // print("response time: $elapsedNanoseconds microseconds");
     }
     setState(() {
       pressedButton = false;
@@ -187,7 +188,7 @@ class _GamePageState extends State<GamePage> {
         color: Colors.black,
       );
       Future.delayed(const Duration(milliseconds: 100), () {
-        randomPhoto = 'assets/images/black.png';
+        randomPhoto = blackImg;
       });
     });
   }
@@ -234,9 +235,7 @@ class _GamePageState extends State<GamePage> {
           return Text('Error: ${snapshot.error}');
         } else {
           final buttonConfig = snapshot.data!;
-          // redCircle = redColor;
           return StyledButton(
-            // red button
             buttonConfig: buttonConfig,
             onPressed: () async {
               final lastRow = await UserSheetsApi.getRowCount();
@@ -248,7 +247,7 @@ class _GamePageState extends State<GamePage> {
                     key: 'wrongAnswers',
                     value: ++wrongAnswers,
                   );
-                  randomPhoto = blackImg;
+                  randomPhoto = wrongImg;
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
                     round,
@@ -256,7 +255,6 @@ class _GamePageState extends State<GamePage> {
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  print("wrong");
                 } else if ((randomNumber == 2 && !isRanbow && !isRightArrow) ||
                     (randomNumber == 2 && isRanbow && !isRed)) {
                   UserSheetsApi.updateCell(
@@ -271,9 +269,8 @@ class _GamePageState extends State<GamePage> {
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  randomPhoto = blackImg;
-                  print("wrong");
-                } else {
+                  randomPhoto = wrongImg;
+                } else { // correct answer
                   UserSheetsApi.updateCell(
                     id: lastRow,
                     key: 'correctAnswers',
@@ -333,8 +330,7 @@ class _GamePageState extends State<GamePage> {
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  randomPhoto = blackImg;
-                  print("wrong");
+                  randomPhoto = wrongImg;
                 } else if ((randomNumber == 2 && isRanbow && isRed) ||
                     (randomNumber == 2 && !isRanbow && isRightArrow)) {
                   UserSheetsApi.updateCell(
@@ -349,10 +345,8 @@ class _GamePageState extends State<GamePage> {
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  randomPhoto = blackImg;
-
-                  print("wrong");
-                } else {
+                  randomPhoto = wrongImg;
+                } else { // correct answer
                   UserSheetsApi.updateCell(
                     id: last,
                     key: 'correctAnswers',
@@ -408,6 +402,7 @@ class _GamePageState extends State<GamePage> {
                     child: Container(
                       width: 200,
                       height: 200,
+                      // child: Image.network(randomPhoto),
                       decoration: BoxDecoration(
                         image: DecorationImage(
                           image: AssetImage(randomPhoto),
@@ -457,29 +452,29 @@ class _GamePageState extends State<GamePage> {
                           height: 200,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(100),
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [Color(0xFF8636FF), Color(0xFF6D2BFF)],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Color(0xFF6D2BFF).withOpacity(0.5),
+                                color: const Color(0xFF6D2BFF).withOpacity(0.5),
                                 spreadRadius: 5,
                                 blurRadius: 10,
-                                offset: Offset(0, 5),
+                                offset: const Offset(0, 5),
                               ),
                               BoxShadow(
-                                color: Color(0xFF8636FF).withOpacity(0.5),
+                                color: const Color(0xFF8636FF).withOpacity(0.5),
                                 spreadRadius: -2,
                                 blurRadius: 10,
-                                offset: Offset(0, -5),
+                                offset: const Offset(0, -5),
                               ),
                             ],
                           ),
-                          child: Center(
+                          child: const Center(
                             child: Text(
-                              "Keep Holding!",
+                              "Hold Me!",
                               style: TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
