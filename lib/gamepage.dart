@@ -29,8 +29,8 @@ List<List<dynamic>> dataToWrite = [
   [
     'quesion',
     'answer',
-    'response of holding button',
-    'respone of click on the answer'
+    'response time from holding until the circles appearce',
+    'response time from the realesing until pressing the answer'
   ]
 ];
 
