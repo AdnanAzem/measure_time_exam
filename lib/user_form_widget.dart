@@ -96,6 +96,7 @@ class _UserFormWidgetState extends State<UserFormWidget> {
       validator: (value) {
         value != null && value.isEmpty ? 'Enter Child Name' : null;
         name = value!;
+        return null;
       });
 
   Widget buildAge() => TextFormField(
