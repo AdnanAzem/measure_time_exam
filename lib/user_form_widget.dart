@@ -20,6 +20,7 @@ class UserFormWidget extends StatefulWidget {
 }
 
 late String name;
+late int type;
 // late final age;
 
 class _UserFormWidgetState extends State<UserFormWidget> {
@@ -100,17 +101,17 @@ class _UserFormWidgetState extends State<UserFormWidget> {
       });
 
   Widget buildAge() => TextFormField(
-      keyboardType: TextInputType.number,
-      inputFormatters: <TextInputFormatter>[
-        FilteringTextInputFormatter.digitsOnly
-      ],
-      controller: controllerAge,
-      decoration: const InputDecoration(
-        labelText: 'Age',
-        border: OutlineInputBorder(),
-      ),
-      validator: (value) =>
-        value != null && value.isEmpty ? 'Enter Age' : null,
+        keyboardType: TextInputType.number,
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.digitsOnly
+        ],
+        controller: controllerAge,
+        decoration: const InputDecoration(
+          labelText: 'Age',
+          border: OutlineInputBorder(),
+        ),
+        validator: (value) =>
+            value != null && value.isEmpty ? 'Enter Age' : null,
       );
 
   Widget buildTesterName() => TextFormField(
@@ -134,19 +135,21 @@ class _UserFormWidgetState extends State<UserFormWidget> {
       );
 
   Widget buildTestType() => TextFormField(
-        keyboardType: TextInputType.number,
-        inputFormatters: <TextInputFormatter>[
-          FilteringTextInputFormatter.allow(RegExp('[12]')),
-          LengthLimitingTextInputFormatter(1),
-        ],
-        controller: controllerTestType,
-        decoration: const InputDecoration(
-          labelText: 'Test Type(1-MainTest, 2-Inhibition)',
-          border: OutlineInputBorder(),
-        ),
-        validator: (value) =>
-            value != null && value.isEmpty ? 'Enter Test Type' : null,
-      );
+      keyboardType: TextInputType.number,
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.allow(RegExp('[12]')),
+        LengthLimitingTextInputFormatter(1),
+      ],
+      controller: controllerTestType,
+      decoration: const InputDecoration(
+        labelText: 'Test Type(1-MainTest, 2-Inhibition)',
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) {
+        value != null && value.isEmpty ? 'Enter Test Type' : null;
+        type = int.parse(value!);
+        return null;
+      });
 
   Widget buildIsBoy() => SwitchListTile(
         contentPadding: EdgeInsets.zero,

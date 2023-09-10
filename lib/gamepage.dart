@@ -134,16 +134,17 @@ String getRandomPhoto() {
 }
 
 class _GamePageState extends State<GamePage> {
+  List<List<dynamic>> dataFromCSV = [];
   // bool isButtonPressed = false;
-  Icon randomArrow = const Icon(
-    Icons.arrow_back,
-    color: Colors.black,
-  );
+  // Icon randomArrow = const Icon(
+  //   Icons.arrow_back,
+  //   color: Colors.black,
+  // );
   String blackImg = 'assets/gifs/black.gif';
   String veryGoodImg = 'assets/gifs/goodjob.gif';
   String wrongImg = 'assets/gifs/wronganswer.gif';
-  String randomPhoto = 'assets/gifs/black.gif';
-  
+  // String randomPhoto = 'assets/gifs/black.gif';
+
   // String blackImg = 'assets/images/black.png';
   // String veryGoodImg = 'assets/images/verygood.png';
   // String randomPhoto = 'assets/images/black.png';
@@ -151,16 +152,131 @@ class _GamePageState extends State<GamePage> {
   int endTime = 0;
   int round = 0;
 
+  int index = 0;
+  String answer = '';
+  Color lefttCircleColor = Colors.black;
+  Color rightCircleColor = Colors.black;
+  String centerImage = 'assets/gifs/black.gif';
+  Color arrowColor = Colors.black;
+  Icon centerArrow = const Icon(
+    Icons.arrow_forward,
+    color: Colors.black,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    index = 0;
+    loadCSV();
+  }
+
+  Future<void> loadCSV() async {
+    String path = 'assets/data/exam1.csv';
+    if (type == 2) {
+      path = 'assets/data/exam2.csv';
+    }
+    final rawData = await rootBundle.loadString(path);
+    final List<List<dynamic>> csvTable =
+        const CsvToListConverter().convert(rawData);
+    setState(() {
+      dataFromCSV = csvTable;
+      // dataFromCSV.removeAt(0);
+    });
+  }
+
+  void leftAndRightCircles() {
+    if (index < dataFromCSV.length) {
+      Future.delayed(Duration(seconds: 3), () {
+        setState(() {
+          dataFromCSV[index][1] == 'red'
+              ? lefttCircleColor = Colors.red
+              : lefttCircleColor = Colors.green;
+
+          // right circle color
+          dataFromCSV[index][2] == 'red'
+              ? rightCircleColor = Colors.red
+              : rightCircleColor = Colors.green;
+        });
+      });
+    }
+  }
+
+  void fillInfo() {
+    // question(0)	leftCircle(1)	rightCircle(2)	image(3)	arrowDirect(4)	arrowColor(5)	answer(6)
+
+    int len = dataFromCSV.length;
+    // dataFromCSV.removeAt(0);
+    setState(() {
+      if (index < len) {
+        // left circle color
+        // String id = dataFromCSV[index][0];
+
+        // dataFromCSV[index][1] == 'red'
+        //     ? lefttCircleColor = Colors.red
+        //     : lefttCircleColor = Colors.green;
+
+        // // right circle color
+        // dataFromCSV[index][2] == 'red'
+        //     ? rightCircleColor = Colors.red
+        //     : rightCircleColor = Colors.green;
+
+        // image (arrows OR rainbow)
+        dataFromCSV[index][3] == 'arrow'
+            ? centerImage = 'assets/gifs/arrows.gif'
+            : centerImage = 'assets/gifs/rainbow-clouds.gif';
+
+        // arrow direction & color
+        if (dataFromCSV[index][4] == 'left' && dataFromCSV[index][5] == 'red') {
+          centerArrow = const Icon(
+            Icons.arrow_back,
+            color: Colors.red,
+            size: 50,
+          );
+        } else if (dataFromCSV[index][4] == 'left' &&
+            dataFromCSV[index][5] == 'green') {
+          centerArrow = const Icon(
+            Icons.arrow_back,
+            color: Colors.green,
+            size: 50,
+          );
+        } else if (dataFromCSV[index][4] == 'right' &&
+            dataFromCSV[index][5] == 'red') {
+          centerArrow = const Icon(
+            Icons.arrow_forward,
+            color: Colors.red,
+            size: 50,
+          );
+        } else {
+          centerArrow = const Icon(
+            Icons.arrow_forward,
+            color: Colors.green,
+            size: 50,
+          );
+        }
+
+        dataFromCSV[index][6] == 'left' ? answer = 'left' : answer = 'right';
+      }
+    });
+  }
+
   void _handleCenterButtonPressDown() {
+    Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        leftAndRightCircles();
+      });
+    });
     Future.delayed(const Duration(seconds: 2), () {
       startTime = DateTime.now().microsecondsSinceEpoch;
-      setState(() {
-        randomArrow = getRandomArrow();
-        randomPhoto = getRandomPhoto();
-        pressedButton = true;
-        // isButtonPressed = true;
-        // print("the time when the user pressed the center button: $startTime");
-      });
+      if (mounted) {
+        setState(() {
+          fillInfo();
+          // randomArrow = getRandomArrow();
+          // randomPhoto = getRandomPhoto();
+          pressedButton = true;
+          // isButtonPressed = true;
+          // print("the time when the user pressed the center button: $startTime");
+        });
+      }
     });
   }
 
@@ -183,12 +299,17 @@ class _GamePageState extends State<GamePage> {
     }
     setState(() {
       pressedButton = false;
-      randomArrow = const Icon(
+      centerArrow = const Icon(
         Icons.arrow_back,
         color: Colors.black,
       );
+      // randomArrow = const Icon(
+      //   Icons.arrow_back,
+      //   color: Colors.black,
+      // );
       Future.delayed(const Duration(milliseconds: 100), () {
-        randomPhoto = blackImg;
+        centerImage = blackImg;
+        // randomPhoto = blackImg;
       });
     });
   }
@@ -197,14 +318,15 @@ class _GamePageState extends State<GamePage> {
     String jsonString =
         await rootBundle.loadString('assets/buttons/red_button.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
-
-    if (randomNumber == 1) {
-      return ButtonConfig.fromJson(jsonMap);
-    } else if (randomNumber == 2) {
-      jsonString =
-          await rootBundle.loadString('assets/buttons/green_button.json');
-      jsonMap = json.decode(jsonString);
-      return ButtonConfig.fromJson(jsonMap);
+    if (index < dataFromCSV.length) {
+      if (dataFromCSV[index][1] == 'red') {
+        return ButtonConfig.fromJson(jsonMap);
+      } else if (dataFromCSV[index][1] == 'green') {
+        jsonString =
+            await rootBundle.loadString('assets/buttons/green_button.json');
+        jsonMap = json.decode(jsonString);
+        return ButtonConfig.fromJson(jsonMap);
+      }
     }
     return ButtonConfig.fromJson(jsonMap);
   }
@@ -213,22 +335,25 @@ class _GamePageState extends State<GamePage> {
     String jsonString =
         await rootBundle.loadString('assets/buttons/green_button.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
-
-    if (randomNumber == 1) {
-      return ButtonConfig.fromJson(jsonMap);
-    } else if (randomNumber == 2) {
-      jsonString =
-          await rootBundle.loadString('assets/buttons/red_button.json');
-      jsonMap = json.decode(jsonString);
-      return ButtonConfig.fromJson(jsonMap);
+    if (index < dataFromCSV.length) {
+      if (dataFromCSV[index][2] == 'green') {
+        return ButtonConfig.fromJson(jsonMap);
+      } else if (dataFromCSV[index][2] == 'red') {
+        jsonString =
+            await rootBundle.loadString('assets/buttons/red_button.json');
+        jsonMap = json.decode(jsonString);
+        return ButtonConfig.fromJson(jsonMap);
+      }
     }
     return ButtonConfig.fromJson(jsonMap);
   }
 
   FutureBuilder<ButtonConfig> getRightCircle() {
+    String result = 'right';
     return FutureBuilder<ButtonConfig>(
       future: loadButtonConfig1(),
       builder: (context, snapshot) {
+        
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const CircularProgressIndicator();
         } else if (snapshot.hasError) {
@@ -240,37 +365,44 @@ class _GamePageState extends State<GamePage> {
             onPressed: () async {
               final lastRow = await UserSheetsApi.getRowCount();
               setState(() {
-                if ((randomNumber == 1 && isRanbow && isRed) ||
-                    (randomNumber == 1 && !isRanbow && !isRightArrow)) {
+                // if ((/*randomNumber == 1 &&*/ isRanbow && isRed) ||
+                //     (/*randomNumber == 1 &&*/ !isRanbow && !isRightArrow)) {
+                if (result != answer) {
                   UserSheetsApi.updateCell(
                     id: lastRow,
                     key: 'wrongAnswers',
                     value: ++wrongAnswers,
                   );
-                  randomPhoto = wrongImg;
+                  // randomPhoto = wrongImg;
+                  centerImage = wrongImg;
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    round,
+                    index, //round,
                     'wrong',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                } else if ((randomNumber == 2 && !isRanbow && !isRightArrow) ||
-                    (randomNumber == 2 && isRanbow && !isRed)) {
-                  UserSheetsApi.updateCell(
-                    id: lastRow,
-                    key: 'wrongAnswers',
-                    value: ++wrongAnswers,
-                  );
-                  _handleOneOfTheCircelsIsPressed();
-                  dataToWrite.add([
-                    round,
-                    'wrong',
-                    responseTimeOfHolding,
-                    responseTimeOfAnswer
-                  ]);
-                  randomPhoto = wrongImg;
-                } else { // correct answer
+                }
+                // else if ((/*randomNumber == 2 &&*/ !isRanbow &&
+                //         !isRightArrow) ||
+                //     (/*randomNumber == 2 &&*/ isRanbow && !isRed)) {
+                //   UserSheetsApi.updateCell(
+                //     id: lastRow,
+                //     key: 'wrongAnswers',
+                //     value: ++wrongAnswers,
+                //   );
+                //   _handleOneOfTheCircelsIsPressed();
+                //   dataToWrite.add([
+                //     index, //round,
+                //     'wrong',
+                //     responseTimeOfHolding,
+                //     responseTimeOfAnswer
+                //   ]);
+                //   // randomPhoto = wrongImg;
+                //   centerImage = wrongImg;
+                // }
+                else {
+                  // correct answer
                   UserSheetsApi.updateCell(
                     id: lastRow,
                     key: 'correctAnswers',
@@ -278,14 +410,15 @@ class _GamePageState extends State<GamePage> {
                   );
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    round,
+                    index, //round,
                     'correct',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  randomPhoto = veryGoodImg;
+                  // randomPhoto = veryGoodImg;
+                  centerImage = veryGoodImg;
                 }
-                randomNumber = random.nextInt(2) + 1;
+                // randomNumber = random.nextInt(2) + 1;
 
                 startTime = 0;
                 endTime = 0;
@@ -298,6 +431,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   FutureBuilder<ButtonConfig> getLeftCircle() {
+    String result = 'left';
     return FutureBuilder<ButtonConfig>(
       future: loadButtonConfig(),
       builder: (context, snapshot) {
@@ -316,8 +450,9 @@ class _GamePageState extends State<GamePage> {
             onPressed: () async {
               final last = await UserSheetsApi.getRowCount();
               setState(() {
-                if ((randomNumber == 1 && isRanbow && !isRed) ||
-                    (randomNumber == 1 && !isRanbow && isRightArrow)) {
+                // if ((/*randomNumber == 1 &&*/ isRanbow && !isRed) ||
+                //     (/*randomNumber == 1 &&*/ !isRanbow && isRightArrow)) {
+                if (result != answer) {
                   UserSheetsApi.updateCell(
                     id: last,
                     key: 'wrongAnswers',
@@ -325,28 +460,33 @@ class _GamePageState extends State<GamePage> {
                   );
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    round,
+                    index, //round,
                     'wrong',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  randomPhoto = wrongImg;
-                } else if ((randomNumber == 2 && isRanbow && isRed) ||
-                    (randomNumber == 2 && !isRanbow && isRightArrow)) {
-                  UserSheetsApi.updateCell(
-                    id: last,
-                    key: 'wrongAnswers',
-                    value: ++wrongAnswers,
-                  );
-                  _handleOneOfTheCircelsIsPressed();
-                  dataToWrite.add([
-                    round,
-                    'wrong',
-                    responseTimeOfHolding,
-                    responseTimeOfAnswer
-                  ]);
-                  randomPhoto = wrongImg;
-                } else { // correct answer
+                  // randomPhoto = wrongImg;
+                  centerImage = wrongImg;
+                }
+                // else if ((/*randomNumber == 2 &&*/ isRanbow && isRed) ||
+                //     (/*randomNumber == 2 &&*/ !isRanbow && isRightArrow)) {
+                //   UserSheetsApi.updateCell(
+                //     id: last,
+                //     key: 'wrongAnswers',
+                //     value: ++wrongAnswers,
+                //   );
+                //   _handleOneOfTheCircelsIsPressed();
+                //   dataToWrite.add([
+                //     index, //round,
+                //     'wrong',
+                //     responseTimeOfHolding,
+                //     responseTimeOfAnswer
+                //   ]);
+                //   // randomPhoto = wrongImg;
+                //   centerImage = wrongImg;
+                // }
+                else {
+                  // correct answer
                   UserSheetsApi.updateCell(
                     id: last,
                     key: 'correctAnswers',
@@ -354,15 +494,16 @@ class _GamePageState extends State<GamePage> {
                   );
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    round,
+                    index, //round,
                     'correct',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  randomPhoto = veryGoodImg;
+                  // randomPhoto = veryGoodImg;
+                  centerImage = veryGoodImg;
                 }
                 // _handleOneOfTheCircelsIsPressed();
-                randomNumber = random.nextInt(2) + 1;
+                // randomNumber = random.nextInt(2) + 1;
                 startTime = 0;
                 endTime = 0;
               });
@@ -378,7 +519,8 @@ class _GamePageState extends State<GamePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Trial $round out of 30',
+          'Trial $index out of 30',
+          // 'Trial $round out of 30',
           style: const TextStyle(
             color: Colors.white,
           ),
@@ -405,7 +547,8 @@ class _GamePageState extends State<GamePage> {
                       // child: Image.network(randomPhoto),
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: AssetImage(randomPhoto),
+                          image: AssetImage(
+                              centerImage), //AssetImage(randomPhoto),
                           fit: BoxFit.fill,
                         ),
                       ),
@@ -414,7 +557,7 @@ class _GamePageState extends State<GamePage> {
                 ),
                 Expanded(
                   child: Center(
-                    child: randomArrow,
+                    child: centerArrow, //randomArrow,
                   ),
                 ),
                 Expanded(
@@ -429,7 +572,9 @@ class _GamePageState extends State<GamePage> {
                             _handleCenterButtonPressDown();
                             containerColor = Colors.purple;
                             round++;
-                            if (round > 30) {
+                            index++;
+
+                            if (index > 30) {
                               saveDataToCSV();
                               Navigator.push(
                                 context,
@@ -438,6 +583,7 @@ class _GamePageState extends State<GamePage> {
                                       const FinalPage(),
                                 ),
                               );
+                              // index++;
                             }
                           });
                         },
