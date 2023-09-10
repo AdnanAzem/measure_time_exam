@@ -4,7 +4,6 @@ import 'package:excel_example/styled_button.dart';
 import 'package:excel_example/user_form_widget.dart';
 import 'package:excel_example/user_sheets_api.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -16,141 +15,39 @@ import 'package:path_provider/path_provider.dart';
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
 
-  static Future<int> getLastRaw() async {
-    final res = await UserSheetsApi.getRowCount() + 1;
-    return res;
-  }
-
   @override
   State<GamePage> createState() => _GamePageState();
 }
 
-List<List<dynamic>> dataToWrite = [
-  [
-    'quesion',
-    'answer',
-    'response time from holding until the circles appearce',
-    'response time from the realesing until pressing the answer'
-  ]
-];
-
-late Color redColor;
 bool pressedButton = false;
-bool isRed = false;
-bool isRightArrow = false;
-bool isRanbow = false;
-int correctAnswers = 0;
-int wrongAnswers = 0;
-Color containerColor = Colors.grey;
-int currentTimeInNanoseconds = getCurrentTimeInNanoseconds();
-int previousTimeInNanoseconds = getCurrentTimeInNanoseconds();
-int responseTimeOfAnswer = 0;
-int responseTimeOfHolding = 0;
-final random = Random();
-int randomNumber = random.nextInt(2) + 1;
-
-Future<void> saveDataToCSV() async {
-  List<List<dynamic>> data = dataToWrite;
-
-  final directory = (await getApplicationDocumentsDirectory());
-  final String path = directory.path;
-
-  final csvFilePath = "$path/csv-$name.csv";
-
-  // Create a File instance and open it for writing.
-  File file = File(csvFilePath);
-  IOSink sink = file.openWrite();
-
-  // Create a CSV converter and write the data to the file.
-  String csvData = const ListToCsvConverter().convert(data);
-  sink.write(csvData);
-
-  // Close the file when done writing.
-  await sink.flush();
-  await sink.close();
-}
-
-// return the time in nanoseconds
-int getCurrentTimeInNanoseconds() {
-  int currentTimeMicroseconds = DateTime.now().microsecondsSinceEpoch;
-  int currentTimeNanoseconds = currentTimeMicroseconds * 1000;
-  return currentTimeNanoseconds;
-}
-
-int getTime(int time) {
-  final currentTimeMicroseconds = DateTime.now().microsecondsSinceEpoch;
-  final currentTimeNanoseconds = currentTimeMicroseconds * 1000;
-  return currentTimeNanoseconds - time;
-}
-
-// return random arrow (left or right)
-Icon getRandomArrow() {
-  Random random = Random();
-  int choice = random.nextInt(2);
-
-  // Set the arrow icon based on the chosen choice
-  IconData iconData = choice == 0 ? Icons.arrow_back : Icons.arrow_forward;
-  choice == 0 ? isRightArrow = false : isRightArrow = true;
-  Icon res = Icon(
-    iconData,
-    size: 50,
-    color: getRandomRedOrGreenColor(),
-  );
-  return res;
-}
-
-// return random color (red or green)
-Color getRandomRedOrGreenColor() {
-  Random random = Random();
-
-  // Generate a random number (0 or 1) to choose between red and green
-  int choice = random.nextInt(2);
-
-  // Set the color component values based on the chosen color
-  int red = choice == 0 ? 255 : 0;
-  int green = choice == 1 ? 255 : 0;
-  int blue = 0; // Set blue to 0 for a pure red or green color
-
-  choice == 0 ? isRed = true : isRed = false;
-
-  // Create a Color object using the chosen color components
-  Color color = Color.fromARGB(255, red, green, blue);
-  return color;
-}
-
-// return random picture (rainbow or arrow)
-String getRandomPhoto() {
-  final List<String> photoAssets = [
-    'assets/gifs/arrows.gif',
-    'assets/gifs/rainbow-clouds.gif'
-    // 'assets/images/arrows2.png',
-    // 'assets/images/rainbow2.jpeg'
-  ];
-
-  Random random = Random();
-  int randomIndex = random.nextInt(photoAssets.length);
-  randomIndex == 0 ? isRanbow = false : isRanbow = true;
-  return photoAssets[randomIndex];
-}
 
 class _GamePageState extends State<GamePage> {
+  Timer? _timer;
+  Timer? _timer1;
+
+  List<List<dynamic>> dataToWrite = [
+    [
+      'quesion',
+      'answer',
+      'response time from holding until the circles appearce',
+      'response time from the realesing until pressing the answer'
+    ]
+  ];
+
   List<List<dynamic>> dataFromCSV = [];
-  // bool isButtonPressed = false;
-  // Icon randomArrow = const Icon(
-  //   Icons.arrow_back,
-  //   color: Colors.black,
-  // );
+
   String blackImg = 'assets/gifs/black.gif';
   String veryGoodImg = 'assets/gifs/goodjob.gif';
   String wrongImg = 'assets/gifs/wronganswer.gif';
-  // String randomPhoto = 'assets/gifs/black.gif';
 
-  // String blackImg = 'assets/images/black.png';
-  // String veryGoodImg = 'assets/images/verygood.png';
-  // String randomPhoto = 'assets/images/black.png';
   int startTime = 0;
   int endTime = 0;
-  int round = 0;
+
+  int correctAnswers = 0;
+  int wrongAnswers = 0;
+  Color containerColor = Colors.grey;
+  int responseTimeOfAnswer = 0;
+  int responseTimeOfHolding = 0;
 
   int index = 0;
   String answer = '';
@@ -170,6 +67,35 @@ class _GamePageState extends State<GamePage> {
     loadCSV();
   }
 
+  Future<void> saveDataToCSV() async {
+    List<List<dynamic>> data = dataToWrite;
+
+    final directory = (await getApplicationDocumentsDirectory());
+    final String path = directory.path;
+
+    final csvFilePath = "$path/$name.csv";
+
+    // Create a File instance and open it for writing.
+    File file = File(csvFilePath);
+    IOSink sink = file.openWrite();
+
+    // Create a CSV converter and write the data to the file.
+    String csvData = const ListToCsvConverter().convert(data);
+    sink.write(csvData);
+
+    // Close the file when done writing.
+    await sink.flush();
+    await sink.close();
+  }
+
+  void _cancelTimer() {
+    _timer?.cancel();
+  }
+
+  void _cancelTimer1() {
+    _timer1?.cancel();
+  }
+
   Future<void> loadCSV() async {
     String path = 'assets/data/exam1.csv';
     if (type == 2) {
@@ -180,25 +106,7 @@ class _GamePageState extends State<GamePage> {
         const CsvToListConverter().convert(rawData);
     setState(() {
       dataFromCSV = csvTable;
-      // dataFromCSV.removeAt(0);
     });
-  }
-
-  void leftAndRightCircles() {
-    if (index < dataFromCSV.length) {
-      Future.delayed(Duration(seconds: 3), () {
-        setState(() {
-          dataFromCSV[index][1] == 'red'
-              ? lefttCircleColor = Colors.red
-              : lefttCircleColor = Colors.green;
-
-          // right circle color
-          dataFromCSV[index][2] == 'red'
-              ? rightCircleColor = Colors.red
-              : rightCircleColor = Colors.green;
-        });
-      });
-    }
   }
 
   void fillInfo() {
@@ -209,16 +117,14 @@ class _GamePageState extends State<GamePage> {
     setState(() {
       if (index < len) {
         // left circle color
-        // String id = dataFromCSV[index][0];
+        dataFromCSV[index][1] == 'red'
+            ? lefttCircleColor = Colors.red
+            : lefttCircleColor = Colors.green;
 
-        // dataFromCSV[index][1] == 'red'
-        //     ? lefttCircleColor = Colors.red
-        //     : lefttCircleColor = Colors.green;
-
-        // // right circle color
-        // dataFromCSV[index][2] == 'red'
-        //     ? rightCircleColor = Colors.red
-        //     : rightCircleColor = Colors.green;
+        // right circle color
+        dataFromCSV[index][2] == 'red'
+            ? rightCircleColor = Colors.red
+            : rightCircleColor = Colors.green;
 
         // image (arrows OR rainbow)
         dataFromCSV[index][3] == 'arrow'
@@ -260,27 +166,23 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _handleCenterButtonPressDown() {
-    Future.delayed(Duration(seconds: 3), () {
+    _timer1 = Timer(const Duration(seconds: 3), () {
+      startTime = DateTime.now().microsecondsSinceEpoch;
       setState(() {
-        leftAndRightCircles();
+        pressedButton = true;
+        index++;
       });
     });
-    Future.delayed(const Duration(seconds: 2), () {
-      startTime = DateTime.now().microsecondsSinceEpoch;
-      if (mounted) {
-        setState(() {
-          fillInfo();
-          // randomArrow = getRandomArrow();
-          // randomPhoto = getRandomPhoto();
-          pressedButton = true;
-          // isButtonPressed = true;
-          // print("the time when the user pressed the center button: $startTime");
-        });
-      }
+    _timer = Timer(const Duration(seconds: 2), () {
+      setState(() {
+        fillInfo();
+      });
     });
   }
 
   void _handleCenterButtonPressUp() {
+    _cancelTimer();
+    _cancelTimer1();
     setState(() {
       endTime = DateTime.now().microsecondsSinceEpoch;
       // isButtonPressed = false;
@@ -303,13 +205,8 @@ class _GamePageState extends State<GamePage> {
         Icons.arrow_back,
         color: Colors.black,
       );
-      // randomArrow = const Icon(
-      //   Icons.arrow_back,
-      //   color: Colors.black,
-      // );
       Future.delayed(const Duration(milliseconds: 100), () {
         centerImage = blackImg;
-        // randomPhoto = blackImg;
       });
     });
   }
@@ -353,7 +250,6 @@ class _GamePageState extends State<GamePage> {
     return FutureBuilder<ButtonConfig>(
       future: loadButtonConfig1(),
       builder: (context, snapshot) {
-        
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const CircularProgressIndicator();
         } else if (snapshot.hasError) {
@@ -365,42 +261,21 @@ class _GamePageState extends State<GamePage> {
             onPressed: () async {
               final lastRow = await UserSheetsApi.getRowCount();
               setState(() {
-                // if ((/*randomNumber == 1 &&*/ isRanbow && isRed) ||
-                //     (/*randomNumber == 1 &&*/ !isRanbow && !isRightArrow)) {
                 if (result != answer) {
                   UserSheetsApi.updateCell(
                     id: lastRow,
                     key: 'wrongAnswers',
                     value: ++wrongAnswers,
                   );
-                  // randomPhoto = wrongImg;
                   centerImage = wrongImg;
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    index, //round,
+                    index, 
                     'wrong',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
                 }
-                // else if ((/*randomNumber == 2 &&*/ !isRanbow &&
-                //         !isRightArrow) ||
-                //     (/*randomNumber == 2 &&*/ isRanbow && !isRed)) {
-                //   UserSheetsApi.updateCell(
-                //     id: lastRow,
-                //     key: 'wrongAnswers',
-                //     value: ++wrongAnswers,
-                //   );
-                //   _handleOneOfTheCircelsIsPressed();
-                //   dataToWrite.add([
-                //     index, //round,
-                //     'wrong',
-                //     responseTimeOfHolding,
-                //     responseTimeOfAnswer
-                //   ]);
-                //   // randomPhoto = wrongImg;
-                //   centerImage = wrongImg;
-                // }
                 else {
                   // correct answer
                   UserSheetsApi.updateCell(
@@ -410,16 +285,13 @@ class _GamePageState extends State<GamePage> {
                   );
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    index, //round,
+                    index, 
                     'correct',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  // randomPhoto = veryGoodImg;
                   centerImage = veryGoodImg;
                 }
-                // randomNumber = random.nextInt(2) + 1;
-
                 startTime = 0;
                 endTime = 0;
               });
@@ -429,6 +301,7 @@ class _GamePageState extends State<GamePage> {
       },
     );
   }
+
 
   FutureBuilder<ButtonConfig> getLeftCircle() {
     String result = 'left';
@@ -441,17 +314,11 @@ class _GamePageState extends State<GamePage> {
           return Text('Error: ${snapshot.error}');
         } else {
           final buttonConfig = snapshot.data!;
-          redColor = Color(int.parse(
-            buttonConfig.buttonColor.replaceAll('#', '0x'),
-          ));
           return StyledButton(
-            // red button
             buttonConfig: buttonConfig,
             onPressed: () async {
               final last = await UserSheetsApi.getRowCount();
               setState(() {
-                // if ((/*randomNumber == 1 &&*/ isRanbow && !isRed) ||
-                //     (/*randomNumber == 1 &&*/ !isRanbow && isRightArrow)) {
                 if (result != answer) {
                   UserSheetsApi.updateCell(
                     id: last,
@@ -460,31 +327,13 @@ class _GamePageState extends State<GamePage> {
                   );
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    index, //round,
+                    index, 
                     'wrong',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  // randomPhoto = wrongImg;
                   centerImage = wrongImg;
                 }
-                // else if ((/*randomNumber == 2 &&*/ isRanbow && isRed) ||
-                //     (/*randomNumber == 2 &&*/ !isRanbow && isRightArrow)) {
-                //   UserSheetsApi.updateCell(
-                //     id: last,
-                //     key: 'wrongAnswers',
-                //     value: ++wrongAnswers,
-                //   );
-                //   _handleOneOfTheCircelsIsPressed();
-                //   dataToWrite.add([
-                //     index, //round,
-                //     'wrong',
-                //     responseTimeOfHolding,
-                //     responseTimeOfAnswer
-                //   ]);
-                //   // randomPhoto = wrongImg;
-                //   centerImage = wrongImg;
-                // }
                 else {
                   // correct answer
                   UserSheetsApi.updateCell(
@@ -494,16 +343,13 @@ class _GamePageState extends State<GamePage> {
                   );
                   _handleOneOfTheCircelsIsPressed();
                   dataToWrite.add([
-                    index, //round,
+                    index, 
                     'correct',
                     responseTimeOfHolding,
                     responseTimeOfAnswer
                   ]);
-                  // randomPhoto = veryGoodImg;
                   centerImage = veryGoodImg;
                 }
-                // _handleOneOfTheCircelsIsPressed();
-                // randomNumber = random.nextInt(2) + 1;
                 startTime = 0;
                 endTime = 0;
               });
@@ -520,7 +366,6 @@ class _GamePageState extends State<GamePage> {
       appBar: AppBar(
         title: Text(
           'Trial $index out of 30',
-          // 'Trial $round out of 30',
           style: const TextStyle(
             color: Colors.white,
           ),
@@ -571,10 +416,7 @@ class _GamePageState extends State<GamePage> {
                           setState(() {
                             _handleCenterButtonPressDown();
                             containerColor = Colors.purple;
-                            round++;
-                            index++;
-
-                            if (index > 30) {
+                            if (index >= 30) {
                               saveDataToCSV();
                               Navigator.push(
                                 context,
